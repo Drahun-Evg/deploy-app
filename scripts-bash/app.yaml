@@ -1,0 +1,9 @@
+---
+
+- name: Up app
+  hosts: hosts
+  become: true
+
+  tasks:
+  - name: Run app
+    ansible.builtin.script: ./run_app.sh

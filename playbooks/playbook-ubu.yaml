@@ -1,0 +1,140 @@
+---
+- name: postgresql install
+  hosts: ubuntu
+  become: true
+
+  tasks: 
+  - name: Install PostgreSQL server Ubuntu
+    when:
+      - ansible_distribution == 'Ubuntu'
+      - ansible_architecture == 'x86_64'
+    become: yes
+    block:
+      - apt_key:
+          url: https://www.postgresql.org/media/keys/ACCC4CF8.asc
+          state: present
+      - apt_repository:
+          repo: deb [arch=amd64] http://apt.postgresql.org/pub/repos/apt/ {{ ansible_distribution_release }}-pgdg main
+          state: present
+          filename: pgdg
+
+      - shell: aptitude search -F %p postgresql- | grep postgresql-[0-9][0-9]$ | sort --version-sort | tail -1 | cut -d '-' -f 2
+        register: pg_latest_version
+        changed_when: pg_latest_version.rc != 0
+      - debug:
+          msg: '{{ pg_latest_version }}'
+      - apt:
+          name:
+          - postgresql
+          - postgresql-contrib
+          - libpq-dev
+          - python3-psycopg2
+          - python3-pip
+          - python3.8-venv
+          - git
+          state: latest
+          install_recommends: yes
+      - service:
+          name: postgresql
+          state: started
+    tags:
+      - linux
+      - ubuntu
+      - install
+      - db
+      - postgresql
+      - pg
+  
+  - name: Config files PostgreSQL Ubuntu
+    when:
+      - ansible_distribution == 'Ubuntu'
+      - ansible_architecture == 'x86_64'
+    become: yes
+    block:
+      - lineinfile:
+          path: /etc/postgresql/15/main/postgresql.conf
+          insertafter: 'Connection Settings'
+          # line: listen_addresses = '10.0.0.0/8'
+          # line: listen_addresses = '10.0.0.0'
+          line: listen_addresses = '*'
+          state: present
+          backup: yes
+        register: pgsql_config
+      - debug:
+          msg: '{{ pgsql_config.changed }}'
+      - lineinfile:
+          path: /etc/postgresql/15/main/pg_hba.conf
+          insertafter: '# TYPE'
+          line: host all all 10.0.0.0/8 md5
+          state: present
+          backup: yes
+        register: pgsql_hba_config
+      - service:
+          name: postgresql
+          state: restarted
+        when: (pgsql_config.changed == true) or (pgsql_hba_config.changed == true)
+    tags:
+      - linux
+      - ubuntu
+      - db
+      - postgresql
+      - pg
+      - config
+
+  - name: create DB postgres
+    when:
+      - ansible_system == "Linux"
+    become: yes
+    become_user: postgres
+    vars:
+      db_name: support
+      db_user: root
+      db_password: root
+      db_postgres_pass: admin
+
+    block:
+    - postgresql_user:
+        name: postgres
+        password: "{{ db_postgres_pass }}"
+  
+    - postgresql_db:   
+        db: "{{ db_name }}"
+        encoding: UTF-8
+        state: present
+        
+    - postgresql_user:
+        db: "{{ db_name }}"
+        name: "{{ db_user }}"
+        password: "{{ db_password }}"
+        role_attr_flags: SUPERUSER
+        state: present
+        expires: infinity
+        priv: CREATE,CONNECT,TEMPORARY
+ 
+    - postgresql_db:
+        db: "{{ db_name }}"
+        owner: "{{ db_user }}"
+        encoding: UTF-8    
+        state: present
+    
+    - postgresql_privs:
+        database: "{{ db_name }}"
+        state: present
+        host: 127.0.0.1
+        privs: "{{ item }}"
+        type: database
+        roles: '{{ db_user }}'
+        login: '{{ db_user }}'
+        password: '{{ db_password }}'
+      with_items:
+        - CREATE
+        - CONNECT
+        - TEMPORARY
+    tags:
+      - linux
+      - ubuntu
+      - db
+      - postgresql
+      - pg
+      - config
+      - create

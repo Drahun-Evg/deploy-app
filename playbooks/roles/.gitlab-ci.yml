@@ -1,0 +1,10 @@
+stages:
+  - test_add_py
+  - test_code_lint
+  - deploy_app_ubu
+  - deploy_app_cent
+  - up_docker
+  - build_app_docker
+  - deploy_app_docker
+
+

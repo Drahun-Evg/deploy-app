@@ -1,0 +1,89 @@
+stages:
+  - test-connect
+  - preparation-env-d
+  - preparation-env-c
+  - clone-prod-rep
+  - run-app
+  - build-in-docker
+  - deploy-in-docker
+
+test-connection job:
+  only:
+    - merge_requests
+    - pushes
+  stage: test-connect
+  tags:
+    - ubuntu
+    - centos
+    - docker
+  script:
+    - ansible-playbook ./playbooks/test-connect.yaml -K
+
+prepare enviroment job debian's:
+  only:
+    - merge_requests
+    - pushes
+  stage: preparation-env-d
+  tags:
+    - linux
+  script:
+    - ansible-playbook ./playbooks/playbook-ubu.yaml -K
+  
+prepare enviroment job redhat's:
+  only:
+    - merge_requests
+    - pushes
+  stage: preparation-env-c
+  tags:
+    - linux
+  script:
+    - ansible-playbook ./playbooks/playbook-cent.yaml -K 
+
+clone repository on hosts:
+  only:
+    - merge_requests
+    - pushes
+  stage: clone-prod-rep
+  tags:
+    - ubuntu
+    - centos
+    - app
+  script:
+    - ansible-playbook ./playbooks/clone-rep.yaml -K
+
+run app on hosts:
+  only:
+    - merge_requests
+    - pushes
+  stage: run-app
+  tags:
+    - ubuntu
+    - centos
+    - app
+  script:
+    - ansible-playbook ./scripts-bash/app.yaml -K
+
+build-app:
+  only:
+    - merge_requests
+    - pushes
+  stage: build-in-docker
+  tags:
+    - docker
+  script:
+    - docker-compose build ./python-app/Dockerfile
+
+deploy-app:
+  only:
+    - merge_requests
+    - pushes
+  stage: deploy-in-docker
+  tags:
+    - docker
+  script:
+    - docker-compose up -d ./python-app/docker-compose.yml
+
+
+
+
+

@@ -1,0 +1,31 @@
+---
+
+- name: Ping Servers
+  hosts: all
+  become: yes
+  
+  tasks:
+  - name: Check Linux Version
+    debug: var=ansible_os_family
+ 
+  - name: Check ping
+    ping:
+ 
+  - block: #======== Debian ========    
+    
+    - name: Check ping
+      ping:
+ 
+    - name: Update debian
+      apt:
+        update_cache: yes
+    
+    when: ansible_os_family == "Debian"
+
+  - block: #======== RedHat ========
+ 
+    - name: Update Redhat
+      yum:
+        update_cache: yes
+    
+    when: ansible_os_family == "RedHat"

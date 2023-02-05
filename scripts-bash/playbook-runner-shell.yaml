@@ -1,0 +1,24 @@
+---
+
+- name: Install gitlab runners with shell
+  hosts: all
+  become: true
+
+  tasks:
+  - name: Check Linux Version
+    debug: var=ansible_os_family
+
+  - block: #======== Debian ========
+
+    - name: run script debian's os
+      ansible.builtin.script: ./gitlab-runner-ubuntu.sh
+
+    when: ansible_os_family == "Debian"
+
+  - block: #======== RedHat ========
+
+    - name: run script redhat's os
+      ansible.builtin.script: ./gitlab-runner-centos.sh
+
+    when: ansible_os_family == "RedHat"
+

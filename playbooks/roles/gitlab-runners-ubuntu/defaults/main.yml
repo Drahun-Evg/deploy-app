@@ -1,0 +1,6 @@
+---
+runner_subname: gitlab-app-runner
+token: GR1348941iWNwN-sxUfAoNUhx9nCX
+description: created with ansible on debian's OS
+tags: ubuntu, app, docker, linux
+url_git: http://192.168.116.160/

@@ -1,0 +1,41 @@
+---
+  - name: Deploy runner
+    community.docker.docker_container:
+      name: "gitlab-runner-{{ runner_subname }}"
+      image: "gitlab/gitlab-runner:latest"
+      restart_policy: always
+      log_driver: "json-file"
+      log_options:
+        max-size: 3G
+      volumes:
+        - "/srv/gitlab-runner-{{ runner_subname }}/config:/etc/gitlab-runner"
+        - "/var/run/docker.sock:/var/run/docker.sock"
+    tags:
+      - standart
+
+  - name: Register runner
+    community.docker.docker_container_exec:
+      container: "gitlab-runner-{{ runner_subname }}"
+      command: /bin/bash -c 'gitlab-runner register -n --url {{ url_git }} --registration-token {{ token }}  --executor docker --tag-list "{{ tags }}" --description "{{ description }}" --docker-image "alpine:latest"'
+    tags:
+      - standart
+
+  - name: Deploy container
+    community.docker.docker_container:
+      name: "gitlab-runner-{{ runner_subname }}"
+      image: "gitlab/gitlab-runner:latest"
+      restart_policy: always
+      log_options:
+        max-size: 3G
+      volumes:
+        - "/srv/gitlab-runner-{{ runner_subname }}/config:/etc/gitlab-runner"
+        - "/var/run/docker.sock:/var/run/docker.sock"
+    tags:
+      - dind
+
+  - name: Register runner
+    community.docker.docker_container_exec:
+      container: "gitlab-runner-{{ runner_subname }}"
+      command: /bin/bash -c 'gitlab-runner register -n --url {{ url_git }} --registration-token {{ token }}  --executor docker --tag-list "{{ tags }}" --description "{{ description }}" --docker-image "docker:latest" --docker-privileged'
+    tags:
+      - dind

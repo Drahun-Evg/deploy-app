@@ -1,0 +1,5 @@
+---
+- hosts: debian
+  become: true
+  roles:
+    - ./roles/docker-ubuntu

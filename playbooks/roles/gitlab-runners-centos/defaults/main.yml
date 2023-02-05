@@ -1,0 +1,6 @@
+---
+runner_subname: centos-user
+token: GR1348941iWNwN-sxUfAoNUhx9nCX
+description: created with ansible
+tags: centos, app
+url_git: http://192.168.116.160/

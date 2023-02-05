@@ -1,0 +1,9 @@
+---
+- name: postgresql install
+  hosts: centos
+  become: true
+
+  tasks:
+  - name: Run a script
+    ansible.builtin.script: ./db_pip_centos.sh
+

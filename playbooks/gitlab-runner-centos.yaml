@@ -1,0 +1,6 @@
+---
+- hosts: centos
+  become: true
+  roles:
+    - gitlab-runners-centos
+
